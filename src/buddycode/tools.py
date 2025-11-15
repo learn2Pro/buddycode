@@ -10,6 +10,7 @@ This module provides LangChain-compatible tools for common file system operation
 - todo: Manage a todo list
 """
 
+from enum import Enum
 import os
 import re
 import subprocess
@@ -631,19 +632,29 @@ class EditTool(BaseTool):
             return f"Error: Permission denied modifying '{path}'"
 
 
+class TodoStatus(str, Enum):
+    pending = "pending"
+    in_progress = "in_progress"
+    completed = "completed"
+    cancelled = "cancelled"
+
+class TodoPriority(str, Enum):
+    low = "low"
+    medium = "medium"
+    high = "high"
+
+class TodoItem(BaseModel):
+    """Representation of a TODO item."""
+
+    id: int = Field(..., ge=0)
+    content: str = Field(..., min_length=1)
+    priority: TodoPriority = Field(default=TodoPriority.medium)
+    status: TodoStatus = Field(default=TodoStatus.pending)
+
 class TodoInput(BaseModel):
     """Input schema for todo tool."""
-    operation: str = Field(
-        description="Operation to perform: 'add' (add item), 'list' (show all), 'complete' (mark done), 'remove' (delete item), 'clear' (remove all)"
-    )
-    item: Optional[str] = Field(
-        default=None,
-        description="Todo item text (required for 'add' operation)"
-    )
-    index: Optional[int] = Field(
-        default=None,
-        description="Todo item index (required for 'complete' and 'remove' operations, 1-based)"
-    )
+    operation: str = Field(description="Operation to perform: 'write' or 'list'")
+    items: Optional[List[TodoItem]] = Field(default=None, description="List of todo items for 'write' operation")
 
 
 class TodoTool(BaseTool):
@@ -652,34 +663,27 @@ class TodoTool(BaseTool):
     name: str = "todo"
     description: str = (
         "Manage a todo list. Operations: "
-        "'add' (add new item), 'list' (show all items), "
-        "'complete' (mark item as done), 'remove' (delete item), 'clear' (remove all). "
+        "'write' (init/update a todo plan), 'list' (show all the todos), "
         "Useful for tracking tasks and action items."
     )
     args_schema: type[BaseModel] = TodoInput
 
     # Class variable to store todos across invocations
-    _todos: List[Dict[str, Any]] = []
+    _todos: List[TodoItem] = []
 
     def _run(
         self,
         operation: str,
-        item: Optional[str] = None,
-        index: Optional[int] = None
+        items: List[TodoItem],
     ) -> str:
         """Execute todo operation."""
         try:
-            if operation == "add":
-                if not item:
+            if operation == "write":
+                if not items:
                     return "Error: 'item' is required for 'add' operation"
 
-                todo = {
-                    "text": item,
-                    "completed": False,
-                    "id": len(self._todos) + 1
-                }
-                self._todos.append(todo)
-                return f"Success: Added todo #{len(self._todos)}: '{item}'"
+                self._todos = items
+                return f"Success: write #{len(self._todos)} todos!"
 
             elif operation == "list":
                 if not self._todos:
@@ -687,44 +691,15 @@ class TodoTool(BaseTool):
 
                 result = ["Todo List:", "-" * 50]
                 for i, todo in enumerate(self._todos, 1):
-                    status = "✓" if todo["completed"] else " "
+                    status = "✓" if todo.status == TodoStatus.completed else " "
                     result.append(f"{i}. [{status}] {todo['text']}")
 
-                completed = sum(1 for t in self._todos if t["completed"])
+                completed = sum(1 for t in self._todos if t.status == TodoStatus.completed)
                 total = len(self._todos)
                 result.append("-" * 50)
                 result.append(f"Total: {total} items ({completed} completed, {total - completed} pending)")
 
                 return "\n".join(result)
-
-            elif operation == "complete":
-                if index is None:
-                    return "Error: 'index' is required for 'complete' operation"
-
-                if index < 1 or index > len(self._todos):
-                    return f"Error: Invalid index {index}. Valid range: 1-{len(self._todos)}"
-
-                todo = self._todos[index - 1]
-                if todo["completed"]:
-                    return f"Info: Todo #{index} '{todo['text']}' is already completed"
-
-                todo["completed"] = True
-                return f"Success: Marked todo #{index} as completed: '{todo['text']}'"
-
-            elif operation == "remove":
-                if index is None:
-                    return "Error: 'index' is required for 'remove' operation"
-
-                if index < 1 or index > len(self._todos):
-                    return f"Error: Invalid index {index}. Valid range: 1-{len(self._todos)}"
-
-                removed = self._todos.pop(index - 1)
-                return f"Success: Removed todo #{index}: '{removed['text']}'"
-
-            elif operation == "clear":
-                count = len(self._todos)
-                self._todos.clear()
-                return f"Success: Cleared all {count} todo item{'s' if count != 1 else ''}"
 
             else:
                 return f"Error: Unknown operation '{operation}'. Valid operations: add, list, complete, remove, clear"
