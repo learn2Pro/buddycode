@@ -1,0 +1,7 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "coding_agent": "./src/buddycode/react_agent.py:create_graph"
+  },
+  "env": ".env"
+}

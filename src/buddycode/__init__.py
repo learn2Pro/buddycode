@@ -7,6 +7,7 @@ This package provides LangChain-compatible tools for:
 - tree: Display directory structure as a tree
 - bash: Execute bash commands
 - edit: Text editor for viewing and modifying files
+- todo: Manage a todo list
 """
 
 from buddycode.tools import (
@@ -15,6 +16,7 @@ from buddycode.tools import (
     TreeTool,
     BashTool,
     EditTool,
+    TodoTool,
     get_file_system_tools,
 )
 
@@ -25,6 +27,7 @@ __all__ = [
     "TreeTool",
     "BashTool",
     "EditTool",
+    "TodoTool",
     "get_file_system_tools",
 ]
 

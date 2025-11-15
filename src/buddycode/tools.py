@@ -7,6 +7,7 @@ This module provides LangChain-compatible tools for common file system operation
 - tree: Display directory structure as a tree
 - bash: Execute bash commands
 - edit: Text editor for viewing and modifying files
+- todo: Manage a todo list
 """
 
 import os
@@ -428,7 +429,7 @@ class EditTool(BaseTool):
     - str_replace: Replace all occurrences of a string
     """
 
-    name: str = "edit"
+    name: str = "text_editor"
     description: str = (
         "Text editor for viewing and modifying files. Supports four operations: "
         "'view' (read file, optionally with line range), "
@@ -630,12 +631,114 @@ class EditTool(BaseTool):
             return f"Error: Permission denied modifying '{path}'"
 
 
+class TodoInput(BaseModel):
+    """Input schema for todo tool."""
+    operation: str = Field(
+        description="Operation to perform: 'add' (add item), 'list' (show all), 'complete' (mark done), 'remove' (delete item), 'clear' (remove all)"
+    )
+    item: Optional[str] = Field(
+        default=None,
+        description="Todo item text (required for 'add' operation)"
+    )
+    index: Optional[int] = Field(
+        default=None,
+        description="Todo item index (required for 'complete' and 'remove' operations, 1-based)"
+    )
+
+
+class TodoTool(BaseTool):
+    """Tool for managing a simple todo list."""
+
+    name: str = "todo"
+    description: str = (
+        "Manage a todo list. Operations: "
+        "'add' (add new item), 'list' (show all items), "
+        "'complete' (mark item as done), 'remove' (delete item), 'clear' (remove all). "
+        "Useful for tracking tasks and action items."
+    )
+    args_schema: type[BaseModel] = TodoInput
+
+    # Class variable to store todos across invocations
+    _todos: List[Dict[str, Any]] = []
+
+    def _run(
+        self,
+        operation: str,
+        item: Optional[str] = None,
+        index: Optional[int] = None
+    ) -> str:
+        """Execute todo operation."""
+        try:
+            if operation == "add":
+                if not item:
+                    return "Error: 'item' is required for 'add' operation"
+
+                todo = {
+                    "text": item,
+                    "completed": False,
+                    "id": len(self._todos) + 1
+                }
+                self._todos.append(todo)
+                return f"Success: Added todo #{len(self._todos)}: '{item}'"
+
+            elif operation == "list":
+                if not self._todos:
+                    return "Todo list is empty"
+
+                result = ["Todo List:", "-" * 50]
+                for i, todo in enumerate(self._todos, 1):
+                    status = "✓" if todo["completed"] else " "
+                    result.append(f"{i}. [{status}] {todo['text']}")
+
+                completed = sum(1 for t in self._todos if t["completed"])
+                total = len(self._todos)
+                result.append("-" * 50)
+                result.append(f"Total: {total} items ({completed} completed, {total - completed} pending)")
+
+                return "\n".join(result)
+
+            elif operation == "complete":
+                if index is None:
+                    return "Error: 'index' is required for 'complete' operation"
+
+                if index < 1 or index > len(self._todos):
+                    return f"Error: Invalid index {index}. Valid range: 1-{len(self._todos)}"
+
+                todo = self._todos[index - 1]
+                if todo["completed"]:
+                    return f"Info: Todo #{index} '{todo['text']}' is already completed"
+
+                todo["completed"] = True
+                return f"Success: Marked todo #{index} as completed: '{todo['text']}'"
+
+            elif operation == "remove":
+                if index is None:
+                    return "Error: 'index' is required for 'remove' operation"
+
+                if index < 1 or index > len(self._todos):
+                    return f"Error: Invalid index {index}. Valid range: 1-{len(self._todos)}"
+
+                removed = self._todos.pop(index - 1)
+                return f"Success: Removed todo #{index}: '{removed['text']}'"
+
+            elif operation == "clear":
+                count = len(self._todos)
+                self._todos.clear()
+                return f"Success: Cleared all {count} todo item{'s' if count != 1 else ''}"
+
+            else:
+                return f"Error: Unknown operation '{operation}'. Valid operations: add, list, complete, remove, clear"
+
+        except Exception as e:
+            return f"Error: {str(e)}"
+
+
 # Convenience function to get all tools
 def get_file_system_tools() -> List[BaseTool]:
     """
     Get a list of all file system tools.
 
     Returns:
-        List of BaseTool instances (LsTool, GrepTool, TreeTool, BashTool, EditTool)
+        List of BaseTool instances (LsTool, GrepTool, TreeTool, BashTool, EditTool, TodoTool)
     """
-    return [LsTool(), GrepTool(), TreeTool(), BashTool(), EditTool()]
+    return [LsTool(), GrepTool(), TreeTool(), BashTool(), EditTool(), TodoTool()]

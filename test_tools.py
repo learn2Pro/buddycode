@@ -8,7 +8,7 @@ def test_imports():
     """Test that all tools can be imported."""
     print("Testing imports...")
     try:
-        from buddycode import LsTool, GrepTool, TreeTool, BashTool, EditTool, get_file_system_tools
+        from buddycode import LsTool, GrepTool, TreeTool, BashTool, EditTool, TodoTool, get_file_system_tools
         print("✓ All imports successful")
         return True
     except ImportError as e:
@@ -114,6 +114,7 @@ def test_edit_tool():
         try:
             # Test view
             result = edit_tool._run(operation="view", file_path=temp_file)
+            print(f"View result: {result}")
             assert isinstance(result, str), "Result should be a string"
             assert "Line 1" in result, "Should contain file content"
             assert "1 |" in result, "Should show line numbers"
@@ -142,6 +143,63 @@ def test_edit_tool():
         return False
 
 
+def test_todo_tool():
+    """Test TodoTool basic functionality."""
+    print("\nTesting TodoTool...")
+    try:
+        from buddycode import TodoTool
+
+        todo_tool = TodoTool()
+
+        # Clear any existing todos first
+        todo_tool._run(operation="clear")
+
+        # Test add
+        result = todo_tool._run(operation="add", item="Test task 1")
+        assert isinstance(result, str), "Result should be a string"
+        assert "Success" in result, "Add should succeed"
+        assert "Test task 1" in result, "Should contain the added item"
+
+        # Add another item
+        result = todo_tool._run(operation="add", item="Test task 2")
+        assert "Success" in result, "Second add should succeed"
+
+        # Test list
+        result = todo_tool._run(operation="list")
+        assert "Test task 1" in result, "Should show first task"
+        assert "Test task 2" in result, "Should show second task"
+        assert "2 items" in result, "Should show correct count"
+
+        # Test complete
+        result = todo_tool._run(operation="complete", index=1)
+        assert "Success" in result or "completed" in result, "Complete should succeed"
+
+        # Verify completion
+        result = todo_tool._run(operation="list")
+        assert "✓" in result, "Should show completed marker"
+
+        # Test remove
+        result = todo_tool._run(operation="remove", index=1)
+        assert "Success" in result or "Removed" in result, "Remove should succeed"
+
+        # Test clear
+        result = todo_tool._run(operation="clear")
+        assert "Success" in result or "Cleared" in result, "Clear should succeed"
+
+        # Verify empty
+        result = todo_tool._run(operation="list")
+        assert "empty" in result, "Should be empty after clear"
+
+        print("✓ TodoTool works correctly")
+        print(f"  Sample output: {result[:100]}...")
+        return True
+    except Exception as e:
+        print(f"✗ TodoTool failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
 def test_get_all_tools():
     """Test getting all tools at once."""
     print("\nTesting get_file_system_tools()...")
@@ -150,7 +208,7 @@ def test_get_all_tools():
 
         tools = get_file_system_tools()
 
-        assert len(tools) == 5, "Should return 5 tools"
+        assert len(tools) == 6, "Should return 6 tools"
         assert all(hasattr(tool, 'name') for tool in tools), "All tools should have name attribute"
         assert all(hasattr(tool, 'description') for tool in tools), "All tools should have description"
 
@@ -159,7 +217,8 @@ def test_get_all_tools():
         assert "grep" in tool_names, "Should include grep tool"
         assert "tree" in tool_names, "Should include tree tool"
         assert "bash" in tool_names, "Should include bash tool"
-        assert "edit" in tool_names, "Should include edit tool"
+        assert "text_editor" in tool_names, "Should include text_editor tool"
+        assert "todo" in tool_names, "Should include todo tool"
 
         print("✓ get_file_system_tools() works correctly")
         print(f"  Tools: {tool_names}")
@@ -196,7 +255,7 @@ def test_error_handling():
     """Test error handling for invalid inputs."""
     print("\nTesting error handling...")
     try:
-        from buddycode import LsTool, GrepTool, TreeTool, BashTool, EditTool
+        from buddycode import LsTool, GrepTool, TreeTool, BashTool, EditTool, TodoTool
         import tempfile
         import os
 
@@ -259,6 +318,26 @@ def test_error_handling():
         finally:
             os.unlink(temp_file)
 
+        # Test todo tool errors
+        todo_tool = TodoTool()
+        todo_tool._run(operation="clear")  # Clear first
+
+        # Add without item
+        result = todo_tool._run(operation="add")
+        assert "Error:" in result or "required" in result
+
+        # Complete without index
+        result = todo_tool._run(operation="complete")
+        assert "Error:" in result or "required" in result
+
+        # Remove with invalid index
+        result = todo_tool._run(operation="remove", index=999)
+        assert "Error:" in result or "Invalid" in result
+
+        # Unknown operation
+        result = todo_tool._run(operation="unknown_op")
+        assert "Error:" in result or "Unknown" in result
+
         print("✓ Error handling works correctly")
         return True
     except Exception as e:
@@ -279,6 +358,7 @@ def main():
         test_tree_tool,
         test_bash_tool,
         test_edit_tool,
+        test_todo_tool,
         test_get_all_tools,
         test_tool_schemas,
         test_error_handling,
