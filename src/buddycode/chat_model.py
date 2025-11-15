@@ -6,14 +6,14 @@ def init_chat_model():
     Initialize the ChatOpenAI model for Doubao (豆包).
 
     Environment variables (optional):
-    - ARK_API_KEY: ByteDance ARK API key (defaults to hardcoded value for local dev)
-    - ARK_BASE_URL: API base URL (defaults to Beijing endpoint)
-    - ARK_MODEL: Model endpoint ID (defaults to ep-20251010103732-rchjc)
+    - OPENAI_API_KEY: ByteDance ARK API key (defaults to hardcoded value for local dev)
+    - OPENAI_BASE_URL: API base URL (defaults to Beijing endpoint)
+    - OPENAI_MODEL: Model endpoint ID (defaults to ep-20251010103732-rchjc)
     """
     # Get configuration from environment or use defaults
-    api_key = os.getenv("ARK_API_KEY")
-    base_url = os.getenv("ARK_BASE_URL")
-    model = os.getenv("ARK_MODEL")
+    api_key = os.getenv("OPENAI_API_KEY")
+    base_url = os.getenv("OPENAI_BASE_URL")
+    model = os.getenv("OPENAI_MODEL")
 
     return ChatOpenAI(
         model=model,
