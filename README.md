@@ -1,64 +1,71 @@
 # BuddyCode
 
-- LangChain tools for file system operations and command execution - providing AI agents with the ability to explore files and execute commands.
-- Disclaimer: 99% code is written by Claude.
+LangChain-based AI coding assistant with file system tools and a beautiful TUI.
+
+**Disclaimer:** 99% code written by Claude.
 
 ## Features
 
-This package provides five powerful LangChain-compatible tools for file system operations:
+### 🎨 Beautiful TUI (Text User Interface)
+- Interactive terminal interface powered by [Textual](https://textual.textualize.io/)
+- Real-time chat with the coding agent
+- Markdown rendering for agent responses
+- Status tracking and progress indicators
 
-- **ls** - List directory contents with various options
-- **grep** - Search for text patterns in files using regular expressions
-- **tree** - Display directory structure as a tree
-- **bash** - Execute bash commands and capture output
-- **edit** - Text editor for viewing and modifying files (view/create/insert/str_replace)
-
-All tools are implemented as LangChain `BaseTool` subclasses and can be easily integrated into LangChain agents and chains.
+### 🛠️ Powerful File System Tools
+LangChain-compatible tools for AI agents:
+- **ls** - List directory contents
+- **grep** - Search patterns in files
+- **tree** - Display directory structure
+- **bash** - Execute shell commands
+- **edit** - View/create/modify files
+- **todo** - Manage task lists
 
 ## Installation
 
 ```bash
-# Using uv (recommended)
-uv pip install buddycode
+# Clone the repository
+git clone <repo-url>
+cd buddycode
 
-# Using pip
-pip install buddycode
+# Install with uv (recommended)
+uv pip install -e .
+
+# Or with pip
+pip install -e .
 ```
 
-### Dependencies
-
-The package requires:
-- Python 3.10+
-- langchain-core
-- pydantic
+**Requirements:** Python 3.11+, langchain, langgraph, textual
 
 ## Quick Start
 
+### 🚀 Launch the TUI
+```bash
+# Method 1: Using the installed command
+buddycode
+
+# Method 2: Using Python module
+uv run python -m buddycode.tui
+
+# Method 3: Run the test script
+uv run python test_tui.py
+```
+
+### 📚 Use as a Library
 ```python
-from buddycode.tools import get_file_system_tools, LsTool, GrepTool, TreeTool, BashTool, EditTool
+from buddycode.react_agent import create_coding_agent
 
-# Get all tools at once
-tools = get_file_system_tools()
+# Create the agent
+agent = create_coding_agent()
 
-# Or import individual tools
-ls_tool = LsTool()
-grep_tool = GrepTool()
-tree_tool = TreeTool()
-bash_tool = BashTool()
-edit_tool = EditTool()
-
-# Use with a LangChain agent
-from langchain.agents import initialize_agent, AgentType
-from langchain_openai import ChatOpenAI
-
-llm = ChatOpenAI(temperature=0)
-agent = initialize_agent(
-    tools=tools,
-    llm=llm,
-    agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
-    verbose=True
+# Chat with the agent
+config = {"configurable": {"thread_id": "my_session"}}
+result = agent.invoke(
+    {"messages": [("user", "Show me the project structure")]},
+    config
 )
 
-# Now your agent can explore the file system!
-agent.run("List all Python files in the current directory")
+# Use individual tools
+from buddycode.tools import get_file_system_tools
+tools = get_file_system_tools()  # ls, grep, tree, bash, edit, todo
 ```
