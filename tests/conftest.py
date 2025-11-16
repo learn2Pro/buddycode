@@ -12,7 +12,15 @@ def mock_agent():
     agent = Mock()
     mock_message = Mock()
     mock_message.content = "Test response from agent"
+    mock_message.tool_calls = []
+    mock_message.type = 'ai'
+
+    # Mock both invoke and stream methods
     agent.invoke.return_value = {"messages": [mock_message]}
+    # Mock stream in messages mode (returns tuples of (node_name, [messages]))
+    agent.stream.return_value = iter([
+        [("agent", [mock_message])]
+    ])
     return agent
 
 
@@ -21,6 +29,7 @@ def mock_agent_error():
     """Create a mock agent that raises errors."""
     agent = Mock()
     agent.invoke.side_effect = Exception("Test error")
+    agent.stream.side_effect = Exception("Test error")
     return agent
 
 
@@ -29,6 +38,7 @@ def mock_agent_no_response():
     """Create a mock agent that returns empty messages."""
     agent = Mock()
     agent.invoke.return_value = {"messages": []}
+    agent.stream.return_value = iter([])
     return agent
 
 

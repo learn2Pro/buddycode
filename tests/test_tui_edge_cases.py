@@ -76,7 +76,9 @@ class TestTUIEdgeCases:
         mock_agent = Mock()
         mock_message = Mock()
         mock_message.content = "Response"
-        mock_agent.invoke.return_value = {"messages": [mock_message]}
+        mock_message.tool_calls = []
+        mock_message.type = 'ai'
+        mock_agent.stream.return_value = iter([[("agent", [mock_message])]])
         mock_create_agent.return_value = mock_agent
 
         app = BuddyCodeTUI()
@@ -101,7 +103,7 @@ class TestTUIEdgeCases:
         """Test handling agent message with no content attribute."""
         mock_agent = Mock()
         mock_message = Mock(spec=[])  # Message with no attributes
-        mock_agent.invoke.return_value = {"messages": [mock_message]}
+        mock_agent.stream.return_value = iter([[("agent", [mock_message])]])
         mock_create_agent.return_value = mock_agent
 
         app = BuddyCodeTUI()
@@ -121,7 +123,7 @@ class TestTUIEdgeCases:
         """Test handling when agent returns unexpected result format."""
         mock_agent = Mock()
         # Return result without 'messages' key
-        mock_agent.invoke.return_value = {"unexpected_key": "value"}
+        mock_agent.stream.return_value = iter([])
         mock_create_agent.return_value = mock_agent
 
         app = BuddyCodeTUI()
@@ -157,8 +159,10 @@ class TestTUIEdgeCases:
         mock_agent = Mock()
         mock_message = Mock()
         mock_message.content = "Response"
+        mock_message.tool_calls = []
+        mock_message.type = 'ai'
         # Simulate slow response
-        mock_agent.invoke.return_value = {"messages": [mock_message]}
+        mock_agent.stream.return_value = iter([[("agent", [mock_message])]])
         mock_create_agent.return_value = mock_agent
 
         app = BuddyCodeTUI()
@@ -203,7 +207,9 @@ def example():
 
 **Bold** and *italic*
 """
-        mock_agent.invoke.return_value = {"messages": [mock_message]}
+        mock_message.tool_calls = []
+        mock_message.type = 'ai'
+        mock_agent.stream.return_value = iter([[("agent", [mock_message])]])
         mock_create_agent.return_value = mock_agent
 
         app = BuddyCodeTUI()
@@ -235,7 +241,7 @@ def example():
     async def test_agent_exception_types(self, mock_create_agent):
         """Test handling different exception types during agent invocation."""
         mock_agent = Mock()
-        mock_agent.invoke.side_effect = ValueError("Value error")
+        mock_agent.stream.side_effect = ValueError("Value error")
         mock_create_agent.return_value = mock_agent
 
         app = BuddyCodeTUI()
@@ -261,7 +267,9 @@ class TestTUIStressTests:
         mock_agent = Mock()
         mock_message = Mock()
         mock_message.content = "Response"
-        mock_agent.invoke.return_value = {"messages": [mock_message]}
+        mock_message.tool_calls = []
+        mock_message.type = 'ai'
+        mock_agent.stream.return_value = iter([[("agent", [mock_message])]])
         mock_create_agent.return_value = mock_agent
 
         app = BuddyCodeTUI()

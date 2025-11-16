@@ -184,9 +184,9 @@ class TestBuddyCodeTUIAsync:
         mock_agent = Mock()
         mock_message = Mock()
         mock_message.content = "Test response"
-        mock_agent.invoke.return_value = {
-            "messages": [mock_message]
-        }
+        mock_message.tool_calls = []
+        mock_message.type = 'ai'
+        mock_agent.stream.return_value = iter([[("agent", [mock_message])]])
         mock_create_agent.return_value = mock_agent
 
         app = BuddyCodeTUI()
@@ -212,7 +212,7 @@ class TestBuddyCodeTUIAsync:
         """Test error handling during message processing."""
         # Create mock agent that raises error
         mock_agent = Mock()
-        mock_agent.invoke.side_effect = Exception("Processing error")
+        mock_agent.stream.side_effect = Exception("Processing error")
         mock_create_agent.return_value = mock_agent
 
         app = BuddyCodeTUI()
@@ -235,7 +235,7 @@ class TestBuddyCodeTUIAsync:
         """Test handling when agent returns no messages."""
         # Create mock agent with empty response
         mock_agent = Mock()
-        mock_agent.invoke.return_value = {"messages": []}
+        mock_agent.stream.return_value = iter([])
         mock_create_agent.return_value = mock_agent
 
         app = BuddyCodeTUI()
@@ -300,7 +300,9 @@ class TestTUIIntegration:
             mock_agent = Mock()
             mock_message = Mock()
             mock_message.content = "I can help with that!"
-            mock_agent.invoke.return_value = {"messages": [mock_message]}
+            mock_message.tool_calls = []
+            mock_message.type = 'ai'
+            mock_agent.stream.return_value = iter([[("agent", [mock_message])]])
             mock_create.return_value = mock_agent
 
             app = BuddyCodeTUI()

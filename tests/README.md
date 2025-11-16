@@ -8,11 +8,14 @@ Comprehensive test suite for the BuddyCode Text User Interface.
 tests/
 ├── __init__.py                    # Package marker
 ├── conftest.py                    # Pytest fixtures and configuration
-├── test_tui_comprehensive.py      # Main functionality tests
-├── test_tui_edge_cases.py         # Edge cases and stress tests
-├── test_tui_widgets.py            # Widget-specific tests
+├── test_tui_comprehensive.py      # Main functionality tests (24 tests)
+├── test_tui_edge_cases.py         # Edge cases and stress tests (18 tests)
+├── test_tui_widgets.py            # Widget-specific tests (16 tests)
+├── test_tui_streaming.py          # Streaming features tests (6 tests)
 └── README.md                      # This file
 ```
+
+**Total: 94 tests**
 
 ## Test Coverage
 
@@ -45,6 +48,15 @@ tests/
 - CSS and styling
 - Message writing and clearing
 - Status updates
+
+### test_tui_streaming.py
+- Tool call display (blue panels)
+- Tool result display (cyan panels)
+- Thinking display (yellow panels)
+- Multiple sequential tool calls
+- Tool argument formatting
+- Long output truncation
+- Status bar updates during tool execution
 
 ## Running Tests
 
