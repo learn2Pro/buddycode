@@ -77,8 +77,10 @@ class TestBuddyCodeTUI:
 class TestBuddyCodeTUIAsync:
     """Async tests for BuddyCodeTUI."""
 
-    async def test_app_compose(self):
+    @patch('buddycode.tui.create_coding_agent')
+    async def test_app_compose(self, mock_create_agent):
         """Test app composition creates all widgets."""
+        mock_create_agent.return_value = Mock()
         app = BuddyCodeTUI()
         async with app.run_test() as pilot:
             # Check that widgets are present
@@ -86,8 +88,10 @@ class TestBuddyCodeTUIAsync:
             assert app.query_one("#user-input") is not None
             assert app.query_one(StatusBar) is not None
 
-    async def test_app_mount(self):
+    @patch('buddycode.tui.create_coding_agent')
+    async def test_app_mount(self, mock_create_agent):
         """Test app initializes correctly on mount."""
+        mock_create_agent.return_value = Mock()
         app = BuddyCodeTUI()
         async with app.run_test() as pilot:
             # Give it time to mount
@@ -98,8 +102,10 @@ class TestBuddyCodeTUIAsync:
             assert app.status_bar is not None
             assert app.user_input is not None
 
-    async def test_clear_action(self):
+    @patch('buddycode.tui.create_coding_agent')
+    async def test_clear_action(self, mock_create_agent):
         """Test clear action clears messages."""
+        mock_create_agent.return_value = Mock()
         app = BuddyCodeTUI()
         async with app.run_test() as pilot:
             await pilot.pause()
@@ -112,8 +118,10 @@ class TestBuddyCodeTUIAsync:
             messages = app.query_one("#messages", MessageDisplay)
             assert messages is not None
 
-    async def test_empty_input_submission(self):
+    @patch('buddycode.tui.create_coding_agent')
+    async def test_empty_input_submission(self, mock_create_agent):
         """Test submitting empty input does nothing."""
+        mock_create_agent.return_value = Mock()
         app = BuddyCodeTUI()
         async with app.run_test() as pilot:
             await pilot.pause()
@@ -253,8 +261,10 @@ class TestBuddyCodeTUIAsync:
             # Should handle gracefully
             assert user_input.value == ""
 
-    async def test_keyboard_navigation(self):
+    @patch('buddycode.tui.create_coding_agent')
+    async def test_keyboard_navigation(self, mock_create_agent):
         """Test keyboard shortcuts work."""
+        mock_create_agent.return_value = Mock()
         app = BuddyCodeTUI()
         async with app.run_test() as pilot:
             await pilot.pause()
@@ -268,8 +278,10 @@ class TestBuddyCodeTUIAsync:
             # Should have a "cleared" message or be minimal
             assert messages is not None
 
-    async def test_input_focus_on_mount(self):
+    @patch('buddycode.tui.create_coding_agent')
+    async def test_input_focus_on_mount(self, mock_create_agent):
         """Test that input field is focused on mount."""
+        mock_create_agent.return_value = Mock()
         app = BuddyCodeTUI()
         async with app.run_test() as pilot:
             await pilot.pause()
@@ -278,8 +290,10 @@ class TestBuddyCodeTUIAsync:
             user_input = app.query_one("#user-input", Input)
             assert user_input.has_focus or app.focused is user_input
 
-    async def test_welcome_message_displayed(self):
+    @patch('buddycode.tui.create_coding_agent')
+    async def test_welcome_message_displayed(self, mock_create_agent):
         """Test that welcome message is displayed on startup."""
+        mock_create_agent.return_value = Mock()
         app = BuddyCodeTUI()
         async with app.run_test() as pilot:
             await pilot.pause()

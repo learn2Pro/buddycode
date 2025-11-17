@@ -9,9 +9,10 @@ LangChain-based AI coding assistant with file system tools and a beautiful TUI.
 - 🎨 **Interactive TUI** - Textual-based terminal interface with markdown rendering
 - ⚡ **Token Streaming** - See responses generated character-by-character in real-time
 - 🔧 **Tool Visibility** - Watch tool calls, arguments, and results as they happen
+- 📋 **Clipboard Copy** - Copy agent responses with Ctrl+C
 - 🛠️ **File System Tools** - ls, grep, tree, bash, edit, todo
 - 🌐 **LangGraph API** - REST API server with checkpointing and multi-session support
-- ✅ **94 Automated Tests** - Comprehensive test coverage with pytest + asyncio
+- ✅ **100 Automated Tests** - Comprehensive test coverage with pytest + asyncio
 - 🤖 **Natural Language** - Chat with AI agent using plain English
 
 ## Architecture
@@ -122,8 +123,9 @@ python -m buddycode.tui
 
 ### Keyboard Shortcuts
 
-- **Ctrl+C** - Quit
-- **Ctrl+L** - Clear chat
+- **Ctrl+Q** - Quit application
+- **Ctrl+L** - Clear chat history
+- **Ctrl+C** - Copy last agent response to clipboard
 - **Enter** - Send message
 
 ### Token-Level Streaming
@@ -167,7 +169,7 @@ Found 2 directories and 1 TODO comment. The project is well-organized
 with source code in `src/` and tests in `tests/`.
 ```
 
-See [TOKEN_STREAMING.md](TOKEN_STREAMING.md) for technical details.
+See [STREAMING.md](STREAMING.md) for technical details.
 
 ### Use as Library
 

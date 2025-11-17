@@ -15,7 +15,9 @@ dependencies = [
     "langgraph>=1.0.3",
     "langgraph-cli[inmem]",
     "pexpect>=4.9.0",
+    "pyperclip>=1.8.2",
     "pydantic>=2.12.4",
+    "python-dotenv>=1.0.0",
     "rich>=14.2.0",
     "textual>=6.6.0",
 ]

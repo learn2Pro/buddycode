@@ -19,6 +19,7 @@ from buddycode.tools import (
     TodoTool,
     get_file_system_tools,
 )
+from dotenv import load_dotenv
 
 __version__ = "0.1.0"
 __all__ = [
@@ -31,7 +32,7 @@ __all__ = [
     "get_file_system_tools",
 ]
 
-
+load_dotenv()
 def hello() -> str:
     """Legacy hello function."""
     return "Hello from buddycode!"

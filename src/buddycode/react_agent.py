@@ -17,9 +17,6 @@ from buddycode.chat_model import init_chat_model
 from buddycode.tools import get_file_system_tools
 
 
-# System prompt header
-# HEADER = """你是一个专业的 React 开发助手 (React Coding Agent)。"""
-
 # Detailed system prompt
 SYSTEM_PROMPT = f"""---
 PROJECT_ROOT: {os.getcwd()}

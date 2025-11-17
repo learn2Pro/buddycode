@@ -12,8 +12,10 @@ from buddycode.tui import BuddyCodeTUI, MessageDisplay, StatusBar
 class TestTUIEdgeCases:
     """Test edge cases and boundary conditions."""
 
-    async def test_very_long_input(self):
+    @patch('buddycode.tui.create_coding_agent')
+    async def test_very_long_input(self, mock_create_agent):
         """Test handling of very long input messages."""
+        mock_create_agent.return_value = Mock()
         app = BuddyCodeTUI()
         async with app.run_test() as pilot:
             await pilot.pause(0.5)
@@ -29,8 +31,10 @@ class TestTUIEdgeCases:
             # Should handle without crashing
             assert user_input.value == ""
 
-    async def test_special_characters_in_input(self):
+    @patch('buddycode.tui.create_coding_agent')
+    async def test_special_characters_in_input(self, mock_create_agent):
         """Test handling of special characters in input."""
+        mock_create_agent.return_value = Mock()
         app = BuddyCodeTUI()
         async with app.run_test() as pilot:
             await pilot.pause(0.5)
@@ -52,8 +56,10 @@ class TestTUIEdgeCases:
                 # Should handle without crashing
                 assert user_input.value == ""
 
-    async def test_whitespace_only_input(self):
+    @patch('buddycode.tui.create_coding_agent')
+    async def test_whitespace_only_input(self, mock_create_agent):
         """Test submitting whitespace-only input."""
+        mock_create_agent.return_value = Mock()
         app = BuddyCodeTUI()
         async with app.run_test() as pilot:
             await pilot.pause(0.5)
@@ -138,8 +144,10 @@ class TestTUIEdgeCases:
             # Should handle missing 'messages' key gracefully
             assert user_input.value == ""
 
-    async def test_multiple_clear_actions(self):
+    @patch('buddycode.tui.create_coding_agent')
+    async def test_multiple_clear_actions(self, mock_create_agent):
         """Test clearing messages multiple times."""
+        mock_create_agent.return_value = Mock()
         app = BuddyCodeTUI()
         async with app.run_test() as pilot:
             await pilot.pause()
@@ -177,8 +185,10 @@ class TestTUIEdgeCases:
             # Should handle requests
             assert user_input.value == ""
 
-    async def test_status_bar_with_very_long_status(self):
+    @patch('buddycode.tui.create_coding_agent')
+    async def test_status_bar_with_very_long_status(self, mock_create_agent):
         """Test status bar with very long status text."""
+        mock_create_agent.return_value = Mock()
         status_bar = StatusBar()
         very_long_status = "X" * 1000
 
@@ -224,8 +234,10 @@ def example():
             # Should render markdown without crashing
             assert user_input.value == ""
 
-    async def test_config_persistence(self):
+    @patch('buddycode.tui.create_coding_agent')
+    async def test_config_persistence(self, mock_create_agent):
         """Test that config thread_id persists across interactions."""
+        mock_create_agent.return_value = Mock()
         app = BuddyCodeTUI()
 
         # Check initial config
@@ -287,8 +299,10 @@ class TestTUIStressTests:
             # Should handle without performance issues
             assert user_input.value == ""
 
-    async def test_message_display_scroll(self):
+    @patch('buddycode.tui.create_coding_agent')
+    async def test_message_display_scroll(self, mock_create_agent):
         """Test message display scrolling with many messages."""
+        mock_create_agent.return_value = Mock()
         app = BuddyCodeTUI()
         async with app.run_test() as pilot:
             await pilot.pause()

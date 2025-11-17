@@ -192,46 +192,112 @@ Type your message below and press Enter to start!
         # Process with agent (don't await - @work decorator handles async)
         self.process_message(user_message)
 
+    def _format_tool_args(self, args: dict) -> str:
+        """Format tool arguments for display."""
+        import json
+        try:
+            return json.dumps(args, indent=2, ensure_ascii=False)
+        except Exception:
+            return str(args)
+
+    async def _stream_agent_response(self, message: str):
+        """Generator that yields streaming chunks from the agent."""
+        loop = asyncio.get_event_loop()
+
+        # Create a generator that streams chunks
+        def stream_gen():
+            for chunk in self.agent.stream(
+                {"messages": [("user", message)]},
+                self.config,
+                stream_mode="values"
+            ):
+                yield chunk
+
+        # Yield chunks asynchronously
+        for chunk in await loop.run_in_executor(None, lambda: list(stream_gen())):
+            yield chunk
+            await asyncio.sleep(0)  # Allow UI to update
+
     @work(exclusive=True)
     async def process_message(self, message: str) -> None:
-        """Process message with the agent."""
+        """Process message with the agent using streaming."""
         self.status_bar.set_status("Agent is thinking...")
 
         try:
-            # Create a placeholder for streaming output
-            thinking_panel = self.messages.write(Panel(
-                "[dim]Agent is processing...[/dim]",
-                title="[bold green]🤖 Agent[/bold green]",
-                border_style="green"
-            ))
+            # Track processed messages to avoid duplicates
+            processed_message_ids = set()
+            last_ai_content = ""
+            seen_tool_calls = set()
 
-            # Run agent in thread pool
-            loop = asyncio.get_event_loop()
-            result = await loop.run_in_executor(
-                None,
-                lambda: self.agent.invoke(
-                    {"messages": [("user", message)]},
-                    self.config
-                )
-            )
+            # Process streaming chunks
+            async for chunk in self._stream_agent_response(message):
+                # Extract messages from chunk
+                if "messages" in chunk and len(chunk["messages"]) > 0:
+                    # Process all messages in chunk (in case multiple arrived)
+                    for msg in chunk["messages"]:
+                        # Generate a message ID to avoid duplicates
+                        msg_id = id(msg)
+                        if msg_id in processed_message_ids:
+                            continue
 
-            # Clear the placeholder (Textual doesn't support editing, so we add new)
-            # Extract final response
-            if "messages" in result and len(result["messages"]) > 0:
-                last_message = result["messages"][-1]
-                response = last_message.content if hasattr(last_message, 'content') else str(last_message)
+                        processed_message_ids.add(msg_id)
 
-                # Display agent response with markdown
-                self.messages.write(Panel(
-                    Markdown(response),
-                    title="[bold green]🤖 Agent[/bold green]",
-                    border_style="green"
-                ))
-            else:
-                self.messages.write(Panel(
-                    "[yellow]No response from agent[/yellow]",
-                    border_style="yellow"
-                ))
+                        # Handle AI messages with tool calls
+                        if hasattr(msg, 'tool_calls') and msg.tool_calls:
+                            for tool_call in msg.tool_calls:
+                                # Create unique ID for tool call
+                                tool_call_id = f"{tool_call.get('name', 'unknown')}_{str(tool_call.get('args', {}))}"
+                                if tool_call_id in seen_tool_calls:
+                                    continue
+                                seen_tool_calls.add(tool_call_id)
+
+                                tool_name = tool_call.get('name', 'unknown')
+                                tool_args = tool_call.get('args', {})
+
+                                self.status_bar.set_status(f"Running tool: {tool_name}")
+
+                                # Display tool call
+                                tool_display = f"🔧 **Tool Call:** `{tool_name}`\n\n```json\n{self._format_tool_args(tool_args)}\n```"
+                                self.messages.write(Panel(
+                                    Markdown(tool_display),
+                                    title=f"[bold yellow]Tool: {tool_name}[/bold yellow]",
+                                    border_style="yellow"
+                                ))
+                                self.messages.scroll_end()
+
+                        # Handle tool responses
+                        elif hasattr(msg, 'type') and msg.type == 'tool':
+                            tool_name = getattr(msg, 'name', 'tool')
+                            tool_content = msg.content
+
+                            # Truncate long outputs
+                            max_length = 500
+                            if len(tool_content) > max_length:
+                                tool_content = tool_content[:max_length] + f"\n... (truncated, {len(tool_content)} chars total)"
+
+                            self.messages.write(Panel(
+                                f"```\n{tool_content}\n```",
+                                title=f"[bold blue]Tool Output: {tool_name}[/bold blue]",
+                                border_style="blue"
+                            ))
+                            self.messages.scroll_end()
+
+                        # Handle AI text content (final response)
+                        elif hasattr(msg, 'content') and msg.content and hasattr(msg, 'type') and msg.type == 'ai':
+                            content = msg.content
+
+                            # Only display if this is new content
+                            if content and content != last_ai_content:
+                                last_ai_content = content
+                                self.status_bar.set_status("Agent responding...")
+
+                                # Display the response
+                                self.messages.write(Panel(
+                                    Markdown(content),
+                                    title="[bold green]🤖 Agent[/bold green]",
+                                    border_style="green"
+                                ))
+                                self.messages.scroll_end()
 
             self.status_bar.set_status("Ready")
 
